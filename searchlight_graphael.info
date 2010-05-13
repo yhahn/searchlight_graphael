@@ -1,0 +1,6 @@
+core = "6.x"
+dependencies[] = "searchlight"
+dependencies[] = "graphael"
+description = "gRaphael visualizations for Searchlight facets."
+name = "Searchlight gRaphael"
+package = "Search"

@@ -1,0 +1,92 @@
+<?php
+
+/**
+ * Build gRaphael graph parameters from a search facet.
+ *
+ * @param string $pie
+ *   The gRaphael method to use. Either 'pie', 'bar', 'line', or 'dot'.
+ * @param string $datasource
+ *   The Searchlight datasource to use for faceting.
+ * @param string $facet
+ *   The name of the facet to build.
+ * @param int $items
+ *   The number of items to return for this facet.
+ * @return
+ *   An array representing parameters that can be passed to theme('graphael').
+ */
+function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items = 5) {
+  $query = searchlight_get_query($datasource->base_table, $datasource->base_field);
+  $plugin = searchlight_get_facet($datasource, $facet);
+  $plugin->construct(NULL, $datasource->fields[$facet], NULL, array('items' => $items));
+  $plugin->query($query);
+  $query->build(new stdClass());
+  $facets = $plugin->render($query, 'facets');
+
+  // Build gRaphael values
+  $graph = array('method' => $method, 'values' => array(), 'opts' => array(), 'settings' => array());
+  switch ($method) {
+    case 'bar':
+      foreach ($facets as $item) {
+        $graph['values'][] = (int) $item['count'];
+        $graph['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE);
+      }
+      break;
+    case 'pie':
+      foreach ($facets as $item) {
+        $graph['values'][] = (int) $item['count'];
+        $graph['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE);
+      }
+      break;
+    case 'line':
+      $i = 0;
+      foreach ($facets as $item) {
+        $graph['values'][0][] = $i;
+        $graph['values'][1][] = (int) $item['count'];
+        $i++;
+
+        $graph['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE);
+      }
+      break;
+    case 'dot':
+      $i = 0;
+      foreach ($facets as $item) {
+        $graph['values'][0][] = $i;
+        $graph['values'][1][] = 0;
+        $graph['values'][2][] = (int) $item['count'];
+        $i++;
+
+        $graph['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE);
+      }
+      break;
+  }
+  return $graph;
+}
+
+/**
+ * Implementation of hook_ctools_api().
+ */
+function searchlight_graphael_ctools_api($module = NULL, $api = NULL) {
+  if ($module === 'boxes' && $api === 'plugins') {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Implementation of hook_boxes_plugins().
+ */
+function searchlight_graphael_boxes_plugins() {
+  $info = array();
+  foreach (searchlight_get_datasource() as $datasource) {
+    $info['searchlight_graphael_' . $datasource->base_table] = array(
+      'title' => t('Searchlight graph (@base_table)', array('@base_table' => $datasource->base_table)),
+      'handler' => array(
+        'class' => 'searchlight_graphael_box',
+        'file' => 'searchlight_graphael_box.inc',
+        'path' => drupal_get_path('module', 'searchlight_graphael') .'/plugins',
+        'parent' => 'box',
+      ),
+    );
+  }
+  return $info;
+}
