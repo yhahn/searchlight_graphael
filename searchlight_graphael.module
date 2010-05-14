@@ -23,18 +23,19 @@ function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items
   $facets = $plugin->render($query, 'facets');
 
   // Build gRaphael values
-  $graph = array('method' => $method, 'values' => array(), 'opts' => array(), 'settings' => array());
+  $graph = array('method' => $method, 'values' => array(), 'params' => array(), 'extend' => array());
   switch ($method) {
     case 'bar':
       foreach ($facets as $item) {
         $graph['values'][] = (int) $item['count'];
-        $graph['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE);
+        $graph['extend']['label']['values'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) . "\n" . $item['count'];
       }
       break;
     case 'pie':
       foreach ($facets as $item) {
         $graph['values'][] = (int) $item['count'];
-        $graph['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE);
+        $graph['params']['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) ;
+        $graph['extend']['label']['values'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) . "\n" . $item['count'];
       }
       break;
     case 'line':
@@ -42,9 +43,8 @@ function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items
       foreach ($facets as $item) {
         $graph['values'][0][] = $i;
         $graph['values'][1][] = (int) $item['count'];
+        $graph['extend']['label']['values'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) . "\n" . $item['count'];
         $i++;
-
-        $graph['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE);
       }
       break;
     case 'dot':
@@ -53,9 +53,9 @@ function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items
         $graph['values'][0][] = $i;
         $graph['values'][1][] = 0;
         $graph['values'][2][] = (int) $item['count'];
+        $graph['extend']['label']['values'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) . "\n" . $item['count'];
         $i++;
 
-        $graph['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE);
       }
       break;
   }

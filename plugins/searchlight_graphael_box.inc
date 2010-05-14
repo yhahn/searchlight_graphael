@@ -69,7 +69,7 @@ class searchlight_graphael_box extends boxes_box {
     if ($datasource = $this->get_datasource()) {
       $attr = array('style' => 'width:auto; height:200px;');
       $graph = searchlight_graphael_build($this->options['method'], $datasource, $this->options['facet'], $this->options['items']);
-      $content = theme('graphael', $graph['method'], $graph['values'], $graph['opts'], $graph['settings'], $attr);
+      $content = theme('graphael', $graph['method'], $graph['values'], $graph['params'], $graph['extend'], $attr);
       $title = isset($this->title) ? check_plain($this->title) : NULL;
       return array(
         'delta' => $this->delta, // Crucial.
