@@ -7,6 +7,8 @@
  *   The gRaphael method to use. Either 'pie', 'bar', 'line', or 'dot'.
  * @param string $datasource
  *   The Searchlight datasource to use for faceting.
+ * @param string $environment
+ *   The Searchlight environment to use.
  * @param string $facet
  *   The name of the facet to build.
  * @param int $items
@@ -14,14 +16,22 @@
  * @return
  *   An array representing parameters that can be passed to theme('graphael').
  */
-function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items = 5) {
-  $query = searchlight_get_query($datasource->base_table, $datasource->base_field);
-  $query->set_search_buildmode('search');
-  $plugin = searchlight_get_facet($datasource, $facet);
-  $plugin->construct(NULL, $datasource->fields[$facet], NULL, array('items' => $items));
-  $plugin->query($query);
-  $query->build(new stdClass());
-  $facets = $plugin->render($query, 'facets');
+function searchlight_graphael_build($method = 'pie', $datasource, $environment = NULL, $facet, $items = 5) {
+  $environment = !empty($environment) ? searchlight_environment_load($environment) : FALSE;
+  $active = searchlight_environment_active();
+
+  if ($environment && $active && ($environment->name === $active->name) && isset($active->plugins[$facet])) {
+    $facets = $plugin->render($active->query, 'facets');
+  }
+  else {
+    $query = searchlight_get_query($datasource->base_table, $datasource->base_field);
+    $query->set_search_buildmode('search');
+    $plugin = searchlight_get_facet($datasource, $facet);
+    $plugin->construct(NULL, $datasource->fields[$facet], NULL, array('items' => $items));
+    $plugin->query($query);
+    $query->build(new stdClass());
+    $facets = $plugin->render($query, 'facets');
+  }
 
   // Build gRaphael values
   $graph = array('method' => $method, 'values' => array(), 'params' => array(), 'extend' => array());
@@ -30,6 +40,10 @@ function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items
       foreach ($facets as $item) {
         $graph['values'][] = (int) $item['count'];
         $graph['extend']['label']['values'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) . "\n" . $item['count'];
+        // Generate link.
+        if ($environment) {
+          $graph['extend']['url']['values'][] = url($environment->getURLPath(), $environment->getURLOptions('add', $facet, $item['id']));
+        }
       }
       break;
     case 'pie':
@@ -37,6 +51,10 @@ function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items
         $graph['values'][] = (int) $item['count'];
         $graph['params']['opts']['legend'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) ;
         $graph['extend']['label']['values'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) . "\n" . $item['count'];
+        // Generate link.
+        if ($environment) {
+          $graph['extend']['url']['values'][] = url($environment->getURLPath(), $environment->getURLOptions('add', $facet, $item['id']));
+        }
       }
       break;
     case 'line':
@@ -46,6 +64,10 @@ function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items
         $graph['values'][1][] = (int) $item['count'];
         $graph['extend']['label']['values'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) . "\n" . $item['count'];
         $i++;
+        // Generate link.
+        if ($environment) {
+          $graph['extend']['url']['values'][] = url($environment->getURLPath(), $environment->getURLOptions('add', $facet, $item['id']));
+        }
       }
       break;
     case 'dot':
@@ -56,7 +78,10 @@ function searchlight_graphael_build($method = 'pie', $datasource, $facet, $items
         $graph['values'][2][] = (int) $item['count'];
         $graph['extend']['label']['values'][] = truncate_utf8($item['title'], 30, TRUE, TRUE) . "\n" . $item['count'];
         $i++;
-
+        // Generate link.
+        if ($environment) {
+          $graph['extend']['url']['values'][] = url($environment->getURLPath(), $environment->getURLOptions('add', $facet, $item['id']));
+        }
       }
       break;
   }

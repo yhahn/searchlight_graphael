@@ -14,6 +14,7 @@ class searchlight_graphael_box extends boxes_box {
   public function options_defaults() {
     return array(
       'method' => 'pie',
+      'environment' => '',
       'facet' => '',
       'items' => 20,
     );
@@ -34,6 +35,18 @@ class searchlight_graphael_box extends boxes_box {
       ),
       '#type' => 'select',
       '#default_value' => $this->options['method'],
+    );
+
+    // Generate environment options.
+    $environments = array();
+    foreach (searchlight_environment_load() as $environment) {
+      $environments[$environment->name] = check_plain($environment->name);
+    }
+    $form['environment'] = array(
+      '#title' => t('Environment'),
+      '#options' => $environments + array('' => '<'. t('No environment') .'>'),
+      '#type' => 'select',
+      '#default_value' => $this->options['environment'],
     );
 
     // Generate facet options.
@@ -68,7 +81,7 @@ class searchlight_graphael_box extends boxes_box {
   public function render() {
     if ($datasource = $this->get_datasource()) {
       $attr = array('style' => 'width:auto; height:200px;');
-      $graph = searchlight_graphael_build($this->options['method'], $datasource, $this->options['facet'], $this->options['items']);
+      $graph = searchlight_graphael_build($this->options['method'], $datasource, $this->options['environment'], $this->options['facet'], $this->options['items']);
       $content = theme('graphael', $graph['method'], $graph['values'], $graph['params'], $graph['extend'], $attr);
       $title = isset($this->title) ? check_plain($this->title) : NULL;
       return array(
