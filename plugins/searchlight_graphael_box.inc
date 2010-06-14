@@ -68,7 +68,7 @@ class searchlight_graphael_box extends boxes_box {
     // Items to be shown.
     $form['items'] = array(
       '#title' => t('Items'),
-      '#options' => range(1, 20),
+      '#options' => drupal_map_assoc(range(1, 20)),
       '#type' => 'select',
       '#default_value' => $this->options['items'],
     );
