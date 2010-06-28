@@ -25,13 +25,15 @@ function searchlight_graphael_build($method = 'pie', $datasource, $environment =
   }
   elseif ($environment) {
     $environment->initView();
-    $query = $environment->view->query;
-    $plugin = searchlight_get_facet($datasource, $facet);
-    $plugin->construct(NULL, $datasource->fields[$facet], NULL, array('items' => $items));
-    $plugin->query($query);
-    $facets = $plugin->render($query, 'facets');
+    if ($query = $environment->view->query) {
+      $plugin = searchlight_get_facet($datasource, $facet);
+      $plugin->construct(NULL, $datasource->fields[$facet], NULL, array('items' => $items));
+      $plugin->query($query);
+      $facets = $plugin->render($query, 'facets');
+    }
   }
-  else {
+
+  if (!isset($facets)) {
     $query = searchlight_get_query($datasource->base_table, $datasource->base_field);
     $query->set_search_buildmode('search');
     $plugin = searchlight_get_facet($datasource, $facet);
