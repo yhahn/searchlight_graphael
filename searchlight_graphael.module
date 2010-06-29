@@ -25,7 +25,7 @@ function searchlight_graphael_build($method = 'pie', $datasource, $environment =
   }
   elseif ($environment) {
     $environment->initView();
-    if ($query = $environment->view->query) {
+    if ($query = $environment->query) {
       $plugin = searchlight_get_facet($datasource, $facet);
       $plugin->construct(NULL, $datasource->fields[$facet], NULL, array('items' => $items));
       $plugin->query($query);
@@ -33,6 +33,7 @@ function searchlight_graphael_build($method = 'pie', $datasource, $environment =
     }
   }
 
+  // If we're unable to get any environment working, just act on the data source.
   if (!isset($facets)) {
     $query = searchlight_get_query($datasource->base_table, $datasource->base_field);
     $query->set_search_buildmode('search');
